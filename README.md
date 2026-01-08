@@ -1,5 +1,3 @@
-# FraudSense-AI
-AI-powered anomaly detection system for real-time fraud detection in financial transactions.
 # 🛡️ FraudSense AI
 
 FraudSense AI is an enterprise-grade AI system that detects fraudulent financial transactions using **unsupervised anomaly detection**.
