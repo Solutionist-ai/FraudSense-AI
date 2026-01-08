@@ -1,22 +1,35 @@
 import streamlit as st
-import numpy as np
+import os
 import joblib
+import numpy as np
 import random
 
-# Load model
-model = joblib.load("model.pkl")
-scaler = joblib.load("scaler.pkl")
+# ------------------ Paths for model and scaler ------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # points to pages/
+MODEL_PATH = os.path.join(BASE_DIR, "..", "model.pkl")  # root folder
+SCALER_PATH = os.path.join(BASE_DIR, "..", "scaler.pkl")
 
-st.title("📊 Transaction Dashboard")
+# ------------------ Load model and scaler ------------------
+@st.cache_data(show_spinner=False)
+def load_model():
+    model = joblib.load(MODEL_PATH)
+    scaler = joblib.load(SCALER_PATH)
+    return model, scaler
 
-# Fake counter
+model, scaler = load_model()
+
+# ------------------ Page Content ------------------
+st.title("📊 Dashboard - FraudSense AI")
+
+# Fake transactions processed counter
 if "tx_count" not in st.session_state:
-    st.session_state.tx_count = random.randint(120000, 150000)
-st.session_state.tx_count += random.randint(5, 20)
-st.metric("Transactions Processed", f"{st.session_state.tx_count:,}")
+    st.session_state.tx_count = random.randint(120000,150000)
+st.session_state.tx_count += random.randint(5,20)
+st.markdown(f"<div style='background:#0d1117;padding:20px;border-radius:12px;text-align:center;color:#00b4ff;border:1px solid #30363d;'>Transactions Processed: {st.session_state.tx_count:,}</div>", unsafe_allow_html=True)
 
 st.divider()
 
+# ------------------ Transaction Input ------------------
 col1, col2, col3 = st.columns(3)
 with col1:
     amount = st.number_input("Transaction Amount (₹)", 10.0, step=100.0)
@@ -25,7 +38,8 @@ with col2:
 with col3:
     tx_24h = st.slider("Transactions (Last 24h)", 1, 50, 3)
 
-if st.button("Analyze Risk", use_container_width=True):
+# ------------------ Risk Analysis ------------------
+if st.button("Analyze Risk"):
     X = np.array([[amount, hour, tx_24h]])
     X_scaled = scaler.transform(X)
 
@@ -40,7 +54,7 @@ if st.button("Analyze Risk", use_container_width=True):
     st.progress(min(score, 1.0))
     st.write(f"Risk Score: **{score:.2f}**")
 
+    # Save history
     if "history" not in st.session_state:
         st.session_state.history = []
     st.session_state.history.append(score)
-
